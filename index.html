@@ -122,12 +122,16 @@ details.pic summary{cursor:pointer;padding:8px 0;min-height:44px;display:flex;al
 .sum{margin:6px 0;padding:8px 10px;border-radius:10px;background:var(--field);border:1px solid var(--line);font-size:.92rem}
 .toast{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);max-width:92%;background:var(--card);border:1px solid var(--sun);border-radius:12px;padding:8px 14px;z-index:30;box-shadow:0 0 18px rgba(0,0,0,.55);font:.9rem system-ui,sans-serif}
 .toast:empty{display:none}
-.step.active .stepcard{border-color:var(--sun);box-shadow:0 0 0 1px rgba(255,211,107,.55),0 0 24px rgba(255,211,107,.42)}
-.step.active .node{border-color:var(--sun);box-shadow:0 0 20px rgba(255,211,107,.85)}
+.step.active .stepcard{border-color:#4b63c9;box-shadow:0 0 16px rgba(255,249,215,.65),0 0 44px rgba(255,234,160,.82)}
+.step.active .node{border-color:#cfe0ff;box-shadow:0 0 12px rgba(255,251,225,1),0 0 32px rgba(255,236,165,1)}
 .nojs{margin:12px 0;padding:12px 14px;border:2px solid var(--sun);border-radius:12px;background:var(--card);font:.95rem/1.5 system-ui,sans-serif}
 .btn:disabled{opacity:.4;cursor:default}
 .status{min-height:1.4em;color:var(--mute);font-size:.9rem}
 .empty{color:var(--mute)}
+.topr{display:flex;align-items:center;gap:8px;flex:none}
+.squig{display:inline-flex;align-items:center;justify-content:center;width:64px;height:52px;border-radius:12px;text-decoration:none}
+.squig svg{width:60px;height:52px;overflow:visible}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 </style>
 </head>
 <body>
@@ -137,7 +141,7 @@ details.pic summary{cursor:pointer;padding:8px 0;min-height:44px;display:flex;al
 </defs></svg>
 <main>
   <noscript><div class="nojs"><b>This app needs to run in a web browser.</b> If you opened the saved file from the Files app, it only shows a plain preview. Open your app address in Safari instead (for example the lishadesign.github.io link), or tap the file and choose Open in Safari.</div></noscript>
-  <div class="top"><h1>Story dictation</h1><button class="btn" id="helpbtn" aria-expanded="false" aria-controls="help">Help</button></div>
+  <div class="top"><h1>Story dictation</h1><div class="topr"><a class="squig" href="doodle-creatures.html" title="Doodle creatures" aria-label="Doodle creatures"><svg viewBox="0 0 60 52" aria-hidden="true" focusable="false"><g fill="none" stroke="#fff" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"><path d="M3.8,40.6 C4.9,28.0 21.9,4.8 39.9,2.8 C40.8,11.0 38.3,18.7 37.7,23.1 C36.2,34.2 34.9,43.5 35.9,47.6 C39.3,46.6 46.7,32.7 47.5,25.4 C48.3,34.2 41.8,48.5 38.2,47.9 C45.2,45.1 51.4,37.3 57.2,35.0"/><path d="M4.9,41.2 C8.7,34.2 18.0,14.9 23.8,18.4 C25.8,24.2 16.5,37.3 12.1,39.7 C8.7,43.5 10.3,50.5 15.7,50.0 C22.7,49.4 34.3,34.2 37.7,23.1"/></g><ellipse cx="4.1" cy="40.8" rx="1.6" ry="1" fill="#fff" transform="rotate(25 4.1 40.8)"/></svg><span class="vh">Doodle creatures</span></a><button class="btn" id="helpbtn" aria-expanded="false" aria-controls="help">Help</button></div></div>
   <p class="sub">Choose a story, then follow the glowing line from your first idea to a finished book.</p>
 
   <section class="panel helpbox" id="help" hidden aria-label="Help">
@@ -465,7 +469,9 @@ var RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').match
     place('root',0,A0,A0+TAU);
     var CX=180,CY=180,D=Math.max(1,maxD),RMAX=136,n=S.stories.length,i,j;
     function rad(d){return D===1?Math.min(112,RMAX):RMAX*(0.55+0.45*(d-1)/(D-1))}
-    S.stories.forEach(function(s){var q=pos[s.id];q.x=CX+Math.cos(q.a)*rad(q.d);q.y=CY+Math.sin(q.a)*rad(q.d)});
+    function hh(t){var h=2166136261;for(var z=0;z<t.length;z++){h^=t.charCodeAt(z);h=Math.imul(h,16777619)}return h>>>0}
+    S.stories.forEach(function(s){var q=pos[s.id],h=hh(String(s.id)),ja=((h%1000)/1000-.5)*Math.min(.9,TAU/Math.max(n,3)*.8),jr=.72+(((h>>>10)%1000)/1000)*.28;
+      var a2=q.a+ja,r2=rad(q.d)*jr;q.x=CX+Math.cos(a2)*r2;q.y=CY+Math.sin(a2)*r2});
     var md=Math.min(rad(1),D>1?RMAX*0.45/(D-1):1e9);
     for(i=0;i<n;i++)for(j=i+1;j<n;j++){var A=pos[S.stories[i].id],B=pos[S.stories[j].id],dd=Math.hypot(A.x-B.x,A.y-B.y);if(dd<md)md=dd}
     var r=Math.max(13,Math.min(30,md*0.42)),fs=Math.max(8,Math.min(13,r*0.42)),maxL=Math.max(6,Math.round(r/2.4)),k32=r/32;
