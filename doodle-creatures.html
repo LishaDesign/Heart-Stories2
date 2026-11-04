@@ -38,8 +38,13 @@ button{cursor:pointer}
 :focus-visible{outline:3px solid var(--ink);outline-offset:3px}
 
 .back{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font:600 .95rem var(--sans);text-decoration:none;border-bottom:2px solid var(--line)}
-h1{font:700 clamp(2.6rem,9vw,4rem)/1 var(--hand);margin:6px 0 4px;letter-spacing:.01em}
-.sub{margin:0 0 18px;max-width:46ch;color:var(--ink-soft)}
+h1{font:700 clamp(2.6rem,9vw,4rem)/1 var(--hand);margin:6px 0 14px;letter-spacing:.01em}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.helpbtn{border:2px solid var(--ink);background:var(--paper-light);border-radius:14px;padding:6px 16px;min-height:44px;font:600 .92rem var(--sans)}
+.helpbtn[aria-expanded="true"]{background:var(--ink);color:var(--paper-light)}
+.helpbox{margin:0 0 16px;padding:14px 16px;border:2px solid var(--ink);border-radius:18px;background:var(--paper-light)}
+.helpbox[hidden]{display:none}
+.helpbox p{margin:0;max-width:46ch;color:var(--ink-soft)}
 
 /* the steps, same idea as the story page */
 .stages{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative}
@@ -61,12 +66,12 @@ h1{font:700 clamp(2.6rem,9vw,4rem)/1 var(--hand);margin:6px 0 4px;letter-spacing
 
 /* the grid of rounded squares */
 .grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
-.card{position:relative;display:grid;grid-template-rows:1fr auto;width:100%;aspect-ratio:1;background:#fff;color:#111;border:0;border-radius:26px;padding:0;overflow:hidden;
+.card{position:relative;display:grid;grid-template-rows:minmax(0,1fr) 46px;width:100%;aspect-ratio:1;background:#fff;color:#111;border:0;border-radius:26px;padding:0;overflow:hidden;
   box-shadow:0 0 0 2px rgba(51,32,15,.28),0 8px 18px rgba(75,48,16,.30)}
 .card:hover{box-shadow:0 0 0 2px var(--ink),0 8px 18px rgba(75,48,16,.30)}
 .card img{width:100%;height:100%;object-fit:contain;padding:10% 8% 2%;mix-blend-mode:multiply;display:block;min-height:0}
-.card .nm{font:700 1.45rem/1.05 var(--hand);text-align:center;padding:0 10px 12px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-.card .nm.empty{font:italic .88rem var(--serif);color:#777;padding-bottom:14px}
+.card .nm{font:700 1.45rem/1.05 var(--hand);text-align:center;padding:0 10px 10px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;justify-content:center;height:46px}
+.card .nm.empty{font:italic .88rem var(--serif);color:#777;padding-bottom:10px}
 .card .tag{position:absolute;top:10px;right:10px;background:#111;color:#fff;border-radius:999px;font:600 .68rem/1 var(--sans);padding:5px 8px}
 .addtile{aspect-ratio:1;border-radius:26px;border:3px dashed var(--ink-soft);background:rgba(255,255,255,.28);display:grid;place-items:center;text-align:center;padding:10px;font:700 1.35rem/1.1 var(--hand);color:var(--ink)}
 .card .tag.bk{right:auto;left:10px;background:#fff;color:#111;box-shadow:inset 0 0 0 1.5px #111}
@@ -101,17 +106,34 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
 .toast:empty{display:none}
 .vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 @media(max-width:520px){
-  .stages{grid-template-columns:repeat(2,1fr);row-gap:14px}
-  .stages::before{display:none}
+  .stages{grid-template-columns:repeat(4,1fr);gap:4px}
+  .stages::before{left:12%;right:12%}
+  .stage b{font-size:1rem}
+  .stage small{font-size:.64rem}
   .grid{grid-template-columns:repeat(2,1fr);gap:12px}
 }
+
+.card,.card *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+.card img{-webkit-user-drag:none;pointer-events:none}
+.grid li.holding .card{transform:scale(.96);transition:transform .15s}
+.grid li{touch-action:pan-y}
+body.dragging{touch-action:none;overscroll-behavior:none}
+.grid li.ghost{opacity:.35}
+.dragclone{position:fixed;z-index:60;margin:0;pointer-events:none;list-style:none;transform:scale(1.06) rotate(2deg);filter:drop-shadow(0 14px 22px rgba(51,32,15,.4))}
+.dragclone .card{box-shadow:0 0 0 3px var(--ink)}
+body.dragging{cursor:grabbing}
 </style>
 </head>
 <body>
 <main>
-  <a class="back" href="index.html">&#8592; Story dictation</a>
+  <div class="topbar">
+    <a class="back" href="index.html">&#8592; Story dictation</a>
+    <button class="helpbtn" id="helpbtn" type="button" aria-expanded="false" aria-controls="help">Help</button>
+  </div>
   <h1>Doodle creatures</h1>
-  <p class="sub">Every doodle gets a square. Meet them, give them a name, then jot down a rough story for each. Each doodle can become its own book, or pick several to tell one story together.</p>
+  <div class="helpbox" id="help" hidden>
+    <p>Every doodle gets a square. Meet them, give them a name, then jot down a rough story for each. Each doodle can become its own book, or pick several to tell one story together.</p>
+  </div>
 
   <ol class="stages" id="stages" aria-label="Steps">
     <li><button class="stage" data-f="all" aria-pressed="true"><span class="n" aria-hidden="true">1</span><b>Doodles</b><small id="c1"></small></button></li>
@@ -124,6 +146,7 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
     <button class="btn primary" id="addbtn">+ Add a doodle</button>
     <button class="btn" id="selbtn" aria-pressed="false">Choose doodles for a book</button>
     <button class="btn" id="copyall">Copy names and stories</button>
+    <button class="btn" id="restore" hidden>Bring back deleted doodles</button>
     <input type="file" id="file" accept="image/*" hidden>
   </div>
   <p class="note" id="filternote" role="status"></p>
@@ -156,7 +179,7 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
   </div>
   <div class="status" id="dstat" role="status"></div>
   <p class="note booknote" id="bookin" style="margin-top:12px"></p>
-  <div class="row"><button class="btn primary" id="mkThis">Make this its own book</button><button class="btn warn" id="del" hidden>Remove this doodle</button></div>
+  <div class="row"><button class="btn primary" id="mkThis">Make this its own book</button><button class="btn warn" id="del">Delete this doodle</button></div>
 </dialog>
 <div class="selbar" id="selbar" hidden>
   <span id="selcount" role="status"></span>
@@ -171,19 +194,24 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
 (function(){
   var KEY='doodle-creatures-v1';
   var SEED=JSON.parse(document.getElementById('seed').textContent);
-  var S={names:{},stories:{},added:[],books:[],lang:'en-ZA'};var SEL=[],picking=false;
+  var S={names:{},stories:{},added:[],removed:[],books:[],lang:'en-ZA',order:[]};var SEL=[],picking=false;
   var F='all',curId=null,rec=null,recOn=false;
   var $=function(id){return document.getElementById(id)};
   var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
 
   try{var r=localStorage.getItem(KEY);if(r){var d=JSON.parse(r);if(d&&typeof d==='object'){
-    S.names=d.names||{};S.stories=d.stories||{};S.added=d.added||[];S.books=d.books||[];S.lang=d.lang||'en-ZA'}}}catch(e){}
+    S.names=d.names||{};S.stories=d.stories||{};S.added=d.added||[];S.removed=d.removed||[];S.books=d.books||[];S.lang=d.lang||'en-ZA';S.order=Array.isArray(d.order)?d.order:[]}}}catch(e){}
 
   var tt;function toast(m){var t=$('toast');t.textContent=m;clearTimeout(tt);tt=setTimeout(function(){t.textContent=''},3200)}
   function save(){try{localStorage.setItem(KEY,JSON.stringify(S));return true}catch(e){toast('Could not save. Storage may be full: try removing an added doodle.');return false}}
 
-  function all(){return SEED.concat(S.added)}
-  function byId(id){var a=all();for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]}
+  function all(){
+    var a=SEED.filter(function(c){return S.removed.indexOf(c.id)<0}).concat(S.added);
+    if(!S.order||!S.order.length)return a;
+    var big=S.order.length+a.length;
+    return a.map(function(c,i){var p=S.order.indexOf(c.id);return{c:c,k:p<0?big+i:p}}).sort(function(x,y){return x.k-y.k}).map(function(x){return x.c});
+  }
+  function byId(id){var a=SEED.concat(S.added);for(var i=0;i<a.length;i++)if(a[i].id===id)return a[i]}
   function nameOf(c){return Object.prototype.hasOwnProperty.call(S.names,c.id)?S.names[c.id]:(c.name||'')}
   function storyOf(c){return S.stories[c.id]||''}
   function hasName(c){return nameOf(c).trim().length>0}
@@ -225,7 +253,9 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
       m.textContent=F==='name'?'Every doodle has a name.':'Every doodle has a rough story.';g.appendChild(m);
     }
     $('filternote').textContent=F==='name'?'Showing the doodles that still need a name.':F==='story'?'Showing the doodles that still need a rough story.':'';
-    counts();
+    $('restore').hidden=!S.removed.length;
+    if(S.removed.length)$('restore').textContent='Bring back deleted doodles ('+S.removed.length+')';
+    counts();fitNames();
   }
 
   document.querySelectorAll('button.stage').forEach(function(b){
@@ -236,6 +266,100 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
     });
   });
 
+
+  // ---------- hold and drag to reorder ----------
+  (function(){
+    var HOLD=300,MOVE=10,grid=$('grid');
+    var timer=null,drag=null,sx=0,sy=0,cx=0,cy=0,pend=null,wasDrag=false,auto=null;
+    function liOf(t){while(t&&t!==grid){if(t.parentNode===grid&&t.querySelector&&t.querySelector('.card'))return t;t=t.parentNode}return null}
+    function cancelHold(){clearTimeout(timer);timer=null;if(pend){pend.classList.remove('holding');pend=null}}
+    function start(li){
+      var r=li.getBoundingClientRect();
+      var clone=li.cloneNode(true);clone.className='dragclone';
+      clone.style.width=r.width+'px';clone.style.height=r.height+'px';
+      clone.style.left=r.left+'px';clone.style.top=r.top+'px';
+      document.body.appendChild(clone);
+      li.classList.remove('holding');li.classList.add('ghost');
+      drag={li:li,clone:clone,ox:cx-r.left,oy:cy-r.top};
+      document.body.classList.add('dragging');
+      if(navigator.vibrate)try{navigator.vibrate(15)}catch(e){}
+      auto=setInterval(function(){
+        if(!drag)return;
+        var h=window.innerHeight;
+        if(cy<90)window.scrollBy(0,-Math.min(16,(90-cy)/4+3));
+        else if(cy>h-90)window.scrollBy(0,Math.min(16,(cy-(h-90))/4+3));
+        else return;
+        move();
+      },16);
+    }
+    function move(){
+      drag.clone.style.left=(cx-drag.ox)+'px';drag.clone.style.top=(cy-drag.oy)+'px';
+      var kids=[].slice.call(grid.children);
+      for(var i=0;i<kids.length;i++){
+        var l=kids[i];
+        if(l===drag.li||!l.querySelector('.card'))continue;
+        var r=l.getBoundingClientRect();
+        if(cx>=r.left&&cx<=r.right&&cy>=r.top&&cy<=r.bottom){
+          if(kids.indexOf(drag.li)<i)grid.insertBefore(drag.li,l.nextSibling);
+          else grid.insertBefore(drag.li,l);
+          break;
+        }
+      }
+    }
+    function end(){
+      clearInterval(auto);auto=null;
+      if(!drag)return;
+      drag.clone.remove();drag.li.classList.remove('ghost');document.body.classList.remove('dragging');
+      var vis=[].slice.call(grid.querySelectorAll('.card')).map(function(b){return b.getAttribute('data-id')});
+      var cur=all().map(function(c){return c.id});
+      var set={};vis.forEach(function(id){set[id]=1});
+      var k=0;
+      S.order=cur.map(function(id){return set[id]?vis[k++]:id});
+      save();
+      drag=null;wasDrag=true;setTimeout(function(){wasDrag=false},350);
+    }
+    function down(li,x,y){sx=cx=x;sy=cy=y;pend=li;li.classList.add('holding');
+      timer=setTimeout(function(){timer=null;var l=pend;pend=null;if(l)start(l)},HOLD)}
+
+    // touch: listeners go on the touched element itself, so they keep working
+    // after that element is moved to a new place in the grid
+    grid.addEventListener('touchstart',function(e){
+      if(picking||drag||e.touches.length!==1)return;
+      var li=liOf(e.target);if(!li)return;
+      var t=e.touches[0],el=e.target;
+      down(li,t.clientX,t.clientY);
+      function tm(ev){
+        var p=ev.touches[0];if(!p)return;
+        cx=p.clientX;cy=p.clientY;
+        if(drag){ev.preventDefault();move()}
+        else if(timer&&Math.hypot(cx-sx,cy-sy)>MOVE)cancelHold();
+      }
+      function te(){
+        el.removeEventListener('touchmove',tm);el.removeEventListener('touchend',te);el.removeEventListener('touchcancel',te);
+        cancelHold();end();
+      }
+      el.addEventListener('touchmove',tm,{passive:false});
+      el.addEventListener('touchend',te);el.addEventListener('touchcancel',te);
+    },{passive:true});
+
+    // mouse / pen
+    grid.addEventListener('pointerdown',function(e){
+      if(e.pointerType==='touch'||e.button>0||drag||picking)return;
+      var li=liOf(e.target);if(!li)return;
+      down(li,e.clientX,e.clientY);
+    });
+    window.addEventListener('pointermove',function(e){
+      if(e.pointerType==='touch')return;
+      cx=e.clientX;cy=e.clientY;
+      if(timer&&Math.hypot(cx-sx,cy-sy)>MOVE)cancelHold();
+      if(drag){e.preventDefault();move()}
+    });
+    window.addEventListener('pointerup',function(e){if(e.pointerType==='touch')return;cancelHold();end()});
+
+    grid.addEventListener('contextmenu',function(e){if(timer||drag||pend)e.preventDefault()});
+    // a drop must not count as a tap that opens the doodle
+    grid.addEventListener('click',function(e){if(wasDrag){e.stopPropagation();e.preventDefault()}},true);
+  })();
 
   // ---------- books ----------
   var SB='storyboard-v1';
@@ -301,7 +425,7 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
     $('dimg').alt=hasName(c)?'Doodle of '+nameOf(c):'Doodle creature';
     $('nm').value=nameOf(c);$('story').value=storyOf(c);$('lang').value=S.lang;
     $('pos').textContent=(idx()+1)+' of '+a.length;
-    $('del').hidden=!S.added.some(function(x){return x.id===curId});
+    fitInput();
     $('dstat').textContent='';wc();fillBookIn();
   }
   function wc(){var t=$('story').value.trim();var n=t?t.split(/\s+/).length:0;$('wc').textContent=n+(n===1?' word':' words')}
@@ -313,17 +437,52 @@ select{padding:8px 10px;border-radius:12px;border:2px solid var(--ink);backgroun
   $('close').addEventListener('click',closeD);
   dlg.addEventListener('close',function(){stopDict();render()});
 
-  $('nm').addEventListener('input',function(){S.names[curId]=$('nm').value;save()});
+  $('nm').addEventListener('input',function(){S.names[curId]=$('nm').value;save();fitInput()});
   function onStory(){S.stories[curId]=$('story').value;wc();save()}
   $('story').addEventListener('input',onStory);
   $('lang').addEventListener('change',function(){S.lang=$('lang').value;save()});
 
   $('del').addEventListener('click',function(){
-    if(!window.confirm('Remove this doodle from the page?'))return;
-    var id=curId,a=all(),i=idx();
-    S.added=S.added.filter(function(x){return x.id!==id});delete S.names[id];delete S.stories[id];save();
-    var b=all();curId=b.length?b[Math.min(i,b.length-1)].id:null;closeD();toast('Doodle removed.');
+    var c=byId(curId);if(!c)return;
+    var nm=nameOf(c).trim();
+    if(!window.confirm('Delete '+(nm?'\u201c'+nm+'\u201d':'this doodle')+' from the page? Its name and rough story go too.'))return;
+    var id=curId,i=idx();
+    if(S.added.some(function(x){return x.id===id}))S.added=S.added.filter(function(x){return x.id!==id});
+    else if(S.removed.indexOf(id)<0)S.removed.push(id);
+    delete S.names[id];delete S.stories[id];
+    SEL=SEL.filter(function(x){return x!==id});
+    save();
+    var b=all();curId=b.length?b[Math.min(i,b.length-1)].id:null;closeD();toast('Doodle deleted.');
   });
+  $('restore').addEventListener('click',function(){
+    var n=S.removed.length;S.removed=[];save();render();toast(n+(n===1?' doodle is back.':' doodles are back.'));
+  });
+
+  // ---------- help ----------
+  $('helpbtn').addEventListener('click',function(){
+    var h=$('help'),open=h.hidden;h.hidden=!open;this.setAttribute('aria-expanded',String(open));this.textContent=open?'Close help':'Help';
+  });
+
+  // ---------- long names: smaller writing, same size picture ----------
+  function shrinkToFit(el,start,min){
+    var sz=start;el.style.fontSize=sz+'px';
+    while(el.scrollWidth>el.clientWidth+0.5&&sz>min){sz-=1;el.style.fontSize=sz+'px'}
+  }
+  function fitNames(){
+    document.querySelectorAll('.card .nm:not(.empty)').forEach(function(el){
+      el.style.fontSize='';var start=parseFloat(getComputedStyle(el).fontSize)||23;
+      var inner=document.createElement('span');inner.textContent=el.textContent;
+      // measure the text itself, not the padded box
+      el.textContent='';el.appendChild(inner);
+      var avail=el.clientWidth-20,sz=start;
+      inner.style.fontSize=sz+'px';
+      while(inner.offsetWidth>avail&&sz>10){sz-=1;inner.style.fontSize=sz+'px'}
+      el.style.fontSize=sz+'px';el.textContent=inner.textContent;
+    });
+  }
+  function fitInput(){var el=$('nm');if(el)shrinkToFit(el,35,16)}
+  window.addEventListener('resize',fitNames);
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(function(){fitNames();fitInput()});
 
   // ---------- dictation ----------
   function setDictBtn(){$('dict').textContent=recOn?'Stop dictating':'Start dictating'}

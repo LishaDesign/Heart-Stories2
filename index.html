@@ -467,21 +467,66 @@ var RM=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').match
     function place(id,d,a0,a1){var k=kids[id]||[],a=a0;if(d>maxD)maxD=d;k.forEach(function(c){var span=(a1-a0)*leaves[c.id]/leaves[id];pos[c.id]={d:d+1,a:a+span/2};place(c.id,d+1,a,a+span);a+=span})}
     var rk=kids.root||[],first=rk.length?TAU*leaves[rk[0].id]/leaves.root:0,A0=-Math.PI/2-first/2;
     place('root',0,A0,A0+TAU);
-    var CX=180,CY=180,D=Math.max(1,maxD),RMAX=136,n=S.stories.length,i,j;
+    var CX=180,CY=180,D=Math.max(1,maxD),RMAX=148,n=S.stories.length,i,j;
     function rad(d){return D===1?Math.min(112,RMAX):RMAX*(0.55+0.45*(d-1)/(D-1))}
     function hh(t){var h=2166136261;for(var z=0;z<t.length;z++){h^=t.charCodeAt(z);h=Math.imul(h,16777619)}return h>>>0}
-    S.stories.forEach(function(s){var q=pos[s.id],h=hh(String(s.id)),ja=((h%1000)/1000-.5)*Math.min(.9,TAU/Math.max(n,3)*.8),jr=.72+(((h>>>10)%1000)/1000)*.28;
-      var a2=q.a+ja,r2=rad(q.d)*jr;q.x=CX+Math.cos(a2)*r2;q.y=CY+Math.sin(a2)*r2});
-    var md=Math.min(rad(1),D>1?RMAX*0.45/(D-1):1e9);
-    for(i=0;i<n;i++)for(j=i+1;j<n;j++){var A=pos[S.stories[i].id],B=pos[S.stories[j].id],dd=Math.hypot(A.x-B.x,A.y-B.y);if(dd<md)md=dd}
-    var r=Math.max(13,Math.min(30,md*0.42)),fs=Math.max(8,Math.min(13,r*0.42)),maxL=Math.max(6,Math.round(r/2.4)),k32=r/32;
+    function parOf(s){return s.parent&&ids[s.parent]?s.parent:'root'}
+    /* Spokes like the sample picture: every firefly sits on its own line out from the star,
+       some short and some long, at slightly uneven angles. */
+    var order=S.stories.slice().sort(function(x,y){return pos[x.id].d-pos[y.id].d});
+    order.forEach(function(s,k){
+      var q=pos[s.id],h=hh(String(s.id)),u1=(h%1000)/1000,u2=((h>>>10)%1000)/1000,
+        slot=Math.min(.9,TAU/Math.max(n,3)),a2=q.a+(u1-.5)*slot*.9,r2;
+      if(q.d===1){r2=rad(1)*(.42+.58*((u2*.5+(k%2)*.5)%1))}
+      else{r2=Math.min(pos[parOf(s)].r+26+u2*30,RMAX+10)}
+      q.r=r2;q.x=CX+Math.cos(a2)*r2;q.y=CY+Math.sin(a2)*r2;
+    });
+    /* Nudge them apart so no firefly touches another firefly, or sits on someone else's line. */
+    function layout(rr,fsz){
+      var P=order.map(function(s){var q=pos[s.id];return{id:s.id,par:parOf(s),x:q.x,y:q.y}}),ix={},N=P.length;
+      P.forEach(function(p,k){ix[p.id]=k});
+      var mind=rr*2.7,wd=rr*1.7,minC=15+rr+12,xl=rr+6,xh=354-rr,yl=rr+6,yh=354-rr-fsz-6,pass,a,b,dx,dy,dd,pu,sx,sy,ex,ey,t,cx,cy,moved;
+      for(pass=0;pass<90;pass++){
+        moved=0;
+        for(a=0;a<N;a++)for(b=a+1;b<N;b++){
+          dx=P[b].x-P[a].x;dy=P[b].y-P[a].y;dd=Math.hypot(dx,dy);
+          if(dd<mind){if(dd<.01){dx=Math.cos(a*2.4+1);dy=Math.sin(a*2.4+1);dd=1}
+            pu=(mind-dd)/2+.05;dx/=dd;dy/=dd;P[a].x-=dx*pu;P[a].y-=dy*pu;P[b].x+=dx*pu;P[b].y+=dy*pu;moved+=pu}
+        }
+        for(b=0;b<N;b++){
+          if(P[b].par==='root'){sx=CX;sy=CY}else{sx=P[ix[P[b].par]].x;sy=P[ix[P[b].par]].y}
+          ex=P[b].x;ey=P[b].y;
+          for(a=0;a<N;a++){
+            if(a===b||P[a].id===P[b].par)continue;
+            dx=ex-sx;dy=ey-sy;t=((P[a].x-sx)*dx+(P[a].y-sy)*dy)/(dx*dx+dy*dy||1);t=Math.max(0,Math.min(1,t));
+            cx=sx+dx*t;cy=sy+dy*t;dx=P[a].x-cx;dy=P[a].y-cy;dd=Math.hypot(dx,dy);
+            if(dd<wd){if(dd<.01){dx=-(ey-sy);dy=ex-sx;dd=Math.hypot(dx,dy)||1}
+              pu=wd-dd+.05;P[a].x+=dx/dd*pu;P[a].y+=dy/dd*pu;moved+=pu}
+          }
+        }
+        for(a=0;a<N;a++){
+          dx=P[a].x-CX;dy=P[a].y-CY;dd=Math.hypot(dx,dy)||1;
+          if(dd<minC){P[a].x=CX+dx/dd*minC;P[a].y=CY+dy/dd*minC}
+          P[a].x=Math.max(xl,Math.min(xh,P[a].x));P[a].y=Math.max(yl,Math.min(yh,P[a].y));
+        }
+        if(moved<.02)break;
+      }
+      var ok=true;
+      for(a=0;a<N&&ok;a++)for(b=a+1;b<N;b++)if(Math.hypot(P[a].x-P[b].x,P[a].y-P[b].y)<mind-.6){ok=false;break}
+      return{P:P,ok:ok};
+    }
+    var r=30,fs,res,stp=n>40?2:1;
+    for(;r>=8;r-=stp){fs=Math.max(8,Math.min(13,r*0.42));res=layout(r,fs);if(res.ok)break}
+    if(r<8){r=8;fs=8}
+    res.P.forEach(function(p){var q=pos[p.id];q.x=p.x;q.y=p.y});
+    fs=Math.max(8,Math.min(13,r*0.42));var maxL=Math.max(6,Math.round(r/2.4)),k32=r/32;
     var svg=el('svg',{viewBox:'0 0 360 360',role:'group','aria-label':'Story star'},b),defs=el('defs',{},svg);
     bi=0;
     S.stories.forEach(function(s,idx){
       var pid=s.parent&&ids[s.parent]?s.parent:'root',pp=pid==='root'?{x:CX,y:CY}:pos[pid],rp=pid==='root'?15:r,c=pos[s.id];
       var vx=c.x-pp.x,vy=c.y-pp.y,len=Math.hypot(vx,vy)||1,ux=vx/len,uy=vy/len;
       var p0x=pp.x+ux*(rp+3),p0y=pp.y+uy*(rp+3),p1x=c.x-ux*(r+3),p1y=c.y-uy*(r+3),L=Math.hypot(p1x-p0x,p1y-p0y),sg=idx%2?1:-1;
-      var cx=(p0x+p1x)/2-uy*L*0.12*sg,cy=(p0y+p1y)/2+ux*L*0.12*sg;
+      var cx=(p0x+p1x)/2-uy*L*0.05*sg,cy=(p0y+p1y)/2+ux*L*0.05*sg;
       el('path',{d:'M'+p0x.toFixed(1)+','+p0y.toFixed(1)+' Q'+cx.toFixed(1)+','+cy.toFixed(1)+' '+p1x.toFixed(1)+','+p1y.toFixed(1),class:'wire'},svg);
       var nb=Math.min(7,Math.max(2,Math.round(L/20)));
       for(var m=1;m<=nb;m++){
